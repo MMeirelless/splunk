@@ -1,11 +1,3 @@
-__
-**Source**: Splunk
-**Tags**: #Data-Analytics #Best-Practices #Administration #Architecting 
--
-**Status**: #In-Progress #Never-Ends
-**Date Created**: 2024-09-13 14:29
-**Date Updated**: 2024-09-13 14:29
-__
 # System Administration
 
 ## Configuration Best Practices
