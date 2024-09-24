@@ -235,3 +235,85 @@ Roll the log files before enabling debugging
 		- Can accommodate indexing lag and searches over a same span
 
 - Classify and reserve resources for critical services with Workload Management
+
+# Architecting Splunk Deployments
+## Forwarder and Deployment
+### Forwarding Summary Indexes
+- Summary indexes are created on the search head by default
+- If you use summary indexes, forward your summary indexes to the indexing layer
+	- Configure outputs.conf on the search head to forward to indexers
+	- This allows all members to access them
+		- Otherwise, they're only available on the search head that generates them
+	- This is required for search head clustering
+- Configure the search head as a forwarder
+> [Forward Search Head Data](http://docs.splunk.com/Documentation/Splunk/latest/DistSearch/Forwardsearchheaddata)
+
+### Forwarding Tier Design
+- Use the UF unless there are specific requirements that necessitate an HF
+	- Sending cooked data through a HF to indexers impacts overall throughput performance
+- Use a syslog server for syslog data
+- Avoid intermediate forwarders when possible:
+	- Bottlenecks can occur
+	- Reduces the distribution of events across indexers
+- If intermediate forwarders are required, ensure there are enough of them
+- Forwarders automatically load balance over available indexers
+	- AutoLB is enabled by default
+	- May need to increase UF thruput setting in limits.conf(default: 256KBps) for high velocity sources
+		- This value should be based on the ratio of forwarders to indexers
+```conf
+[thruput]
+maxKBps = 0
+#zero is unlimited
+#default was 256
+```
+
+### Deployment Management
+
+| Type of Instance                                                | Manage Configurations with...                            |
+| --------------------------------------------------------------- | -------------------------------------------------------- |
+| Forwarder<br>Search Head (stand-alone)<br>Indexer (stand-alone) | Deployment Server or other configuration management tool |
+| Search Head Cluster Member                                      | Deployer only                                            |
+| Peer Node in Indexer Cluster                                    | Cluster Manager only                                     |
+
+#### Deployment Apps
+- Design your deployment app
+	- An app is a set of deployment content (a configuration bundle)
+	- An app is deployed as a unit and should be small
+	- Take advantage of Splunk’s configuration layering
+	- Use a naming convention for the apps
+	- Create classes of apps, for example
+		- Input apps
+		- Index apps
+		- Web control apps
+- Carefully design apps regardless of your configuration management tool (DS, Manager Node, Puppet, etc.)
+
+## Staging & Testing Environments
+- Part of your Splunk deployment should include a separate "sandbox" or testing / staging environment
+	- Same version of Splunk in production is preferred
+- Sizing the testing environment depends on types of tests
+
+| Test...        | Deployment Type                                                                      |
+| -------------- | ------------------------------------------------------------------------------------ |
+| Inputs         | A standalone indexer with minimal performance and capacity                           |
+| Configurations | A minimum set of components (one Search Head, one Indexer, one Deployment Server, …) |
+| Performance    | An accurate duplication of the production environment                                |
+
+
+## Splunk Validated Architectures (SVAs)
+- Proven reference architectures
+- Designed by Splunk Architects based on best practices
+- Repeatable deployments
+- Offer topology options for your environment and requirements
+
+## Indexer Clustering Requirements
+For single-site mode:
+- Minimum number of peer nodes equal to replication factor (RF)
+	- Example: RF = 3 requires a minimum of three peer nodes
+- **Best Practice**: Minimum of (RF + 1) peer nodes
+
+## Improving Search Performance
+- Make sure disk I/O is as good as you can get
+	- Increase CPU hardware only if needed
+- Most search performance issues can be addressed by adding additional search peers (indexers)
+- Look at resource consumption on both the indexer tier and search head tier to diagnose slow searches
+- Rebalance buckets (only available in indexer clustering)
