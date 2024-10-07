@@ -9,8 +9,8 @@ def create_indexes(indexes, mode):
                 "list" prints just the index formatted names.
     """
     
-    # Set customer prefix for the index names -> CHANGE ME
-    customer = "apple"
+    # Set customer prefix for the index names -> CHANGE ME; LEAVE BLANK ("") IF DON'T WANT PREFIX
+    customer = ""
     
     # Print the header only when in "config" mode
     if mode == "config":
@@ -19,7 +19,7 @@ def create_indexes(indexes, mode):
     # Iterate through each index to create a configuration or list the index formatted name
     for index in indexes:
         # Construct the index formatted name by appending the customer prefix
-        index_name = f"{customer}_{index}"
+        index_name = index if customer=="" else f"{customer}_{index}"
         
         # Configuration details for the index
         index_config = f"""[{index_name}]
@@ -44,10 +44,10 @@ def main():
     """
     
     # List of indexes to create -> CHANGE ME
-    indexes = ["syslog", "winevent", "ad", "crowdstrike"]
+    indexes = ["os", "gamelog", "network"]
     
     # Call create_indexes with "list" mode to print index names -> CHANGE ME
-    create_indexes(indexes, "list")
+    create_indexes(indexes, "config")
 
 # Entry point of the script
 if __name__ == "__main__":
